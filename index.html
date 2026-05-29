@@ -83,7 +83,8 @@
 
         .selection-card i { font-size: 20px; color: #999; margin-bottom: 8px; display: block; }
         .selection-card.active i { color: var(--primary-blue); }
-        .selection-card h3 { margin: 0; font-size: 14px; }
+        .selection-card h3 { margin: 0; font-size: 14px; line-height: 1.4; }
+        .selection-card span { font-size: 11px; font-weight: normal; color: #777; display: block; margin-top: 2px; }
 
         .sub-step, .config-step-wrapper {
             display: none;
@@ -105,7 +106,7 @@
             padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
             appearance: none;
             background: white;
             cursor: pointer;
@@ -182,15 +183,17 @@
         </header>
 
         <!-- Step 1 -->
-        <label class="section-label">1. Application Category</label>
+        <label class="section-label">1. Select Application Category</label>
         <div class="selection-grid" id="main-cats">
             <div class="selection-card" id="cat-traditional" onclick="selectCategory('traditional')">
                 <i class="fa-solid fa-house-user"></i>
                 <h3>Traditional</h3>
+                <span>(Tubular Motor)</span>
             </div>
             <div class="selection-card" id="cat-industrial" onclick="selectCategory('industrial')">
                 <i class="fa-solid fa-industry"></i>
                 <h3>Industrial</h3>
+                <span>(Outboard Motor)</span>
             </div>
         </div>
 
@@ -228,23 +231,23 @@
                             </div>
                         </div>
 
-                        <!-- Barrel Size: NOW A DROPDOWN -->
+                        <!-- Barrel Size -->
                         <div class="input-item">
-                            <label class="section-label">Barrel Size</label>
+                            <label class="section-label">Barrel Size (Imperial / Metric)</label>
                             <div class="select-wrapper">
                                 <select id="select-barrel">
                                     <option value="" disabled selected>Select barrel size...</option>
-                                    <option>4" 16 g</option>
-                                    <option>4" 10g</option>
-                                    <option>5" 10g</option>
-                                    <option>5.5" 6g</option>
-                                    <option>6 5/8th" 6g</option>
-                                    <option>7 5/8th" 3g</option>
+                                    <option>4" (101.6mm) 16g (1.6mm)</option>
+                                    <option>4" (101.6mm) 10g (3.2mm)</option>
+                                    <option>5" (127.0mm) 10g (3.2mm)</option>
+                                    <option>5.5" (139.7mm) 6g (4.8mm)</option>
+                                    <option>6 5/8" (168.3mm) 6g (4.8mm)</option>
+                                    <option>7 5/8" (193.7mm) 3g (6.4mm)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Shaft Size: NOW A DROPDOWN (Conditional) -->
+                        <!-- Shaft Size: Conditional -->
                         <div class="input-item conditional-input" id="box-shaft">
                             <label class="section-label">Shaft Size</label>
                             <div class="select-wrapper">
@@ -263,6 +266,19 @@
                             <label class="section-label">Motor Specification</label>
                             <div class="input-wrapper">
                                 <input type="text" id="input-motor" placeholder="Type motor specification...">
+                            </div>
+                        </div>
+
+                        <!-- Control Panel: Conditional (Industrial Motors) -->
+                        <div class="input-item conditional-input" id="box-control-panel">
+                            <label class="section-label">Control Panel</label>
+                            <div class="select-wrapper">
+                                <select id="select-control-panel">
+                                    <option value="" disabled selected>Select control panel...</option>
+                                    <option>TS971</option>
+                                    <option>TS959</option>
+                                    <option>No Panel Required</option>
+                                </select>
                             </div>
                         </div>
 
@@ -354,9 +370,9 @@
             document.getElementById('preview-img').style.display = 'none';
             document.getElementById('placeholder-text').style.display = 'block';
             document.querySelectorAll('.conditional-input').forEach(box => box.style.display = 'none');
-            // Reset select values
             document.getElementById('select-barrel').selectedIndex = 0;
             document.getElementById('select-shaft').selectedIndex = 0;
+            document.getElementById('select-control-panel').selectedIndex = 0;
         }
 
         function handleSelectionChange() {
@@ -375,11 +391,12 @@
             const shaftBox = document.getElementById('box-shaft');
             const motorBox = document.getElementById('box-motor');
             const plateBox = document.getElementById('box-plate');
+            const controlBox = document.getElementById('box-control-panel');
 
             const hasMotor = selectedText.includes('motor');
             const hasPlate = selectedText.includes('plate');
 
-            // Requirement: If Industrial and NO motor -> Show Shaft Size dropdown
+            // Requirement: Industrial & NO motor -> Show Shaft Size
             if (currentCategory === 'industrial' && !hasMotor) {
                 shaftBox.style.display = 'flex';
             } else {
@@ -388,6 +405,13 @@
 
             // Show Motor spec if "motor" is selected
             motorBox.style.display = hasMotor ? 'flex' : 'none';
+
+            // Show Control Panel if Industrial & has motor
+            if (currentCategory === 'industrial' && hasMotor) {
+                controlBox.style.display = 'flex';
+            } else {
+                controlBox.style.display = 'none';
+            }
             
             // Show Plate spec if "plate" is selected
             plateBox.style.display = hasPlate ? 'flex' : 'none';
