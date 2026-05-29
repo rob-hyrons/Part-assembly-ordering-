@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Stable PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
@@ -26,9 +26,9 @@
             color: var(--text-dark);
         }
 
-        /* Fixed width container for consistent scaling */
+        /* This is the area being captured */
         .config-container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -46,19 +46,15 @@
             padding-bottom: 10px;
         }
 
-        h1 {
-            font-weight: 300;
-            font-size: 24px;
-            margin: 0;
-        }
-
+        h1 { font-weight: 300; font-size: 24px; margin: 0; color: var(--primary-blue); }
         h1 span { font-weight: 600; color: var(--primary-blue); }
+        .brand { font-weight: 800; color: #a31d24; font-size: 18px; }
 
         .section-label {
             display: block;
             font-weight: 700;
-            font-size: 12px;
-            color: #555;
+            font-size: 11px;
+            color: #666;
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -67,8 +63,8 @@
         .selection-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
         .selection-card {
@@ -77,8 +73,8 @@
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            transition: 0.2s;
             background: white;
+            transition: 0.2s;
         }
 
         .selection-card.active {
@@ -93,38 +89,38 @@
         .sub-step, .config-step-wrapper {
             display: none;
             border-top: 1px dashed var(--border-color);
-            padding-top: 20px;
-            margin-top: 15px;
+            padding-top: 25px;
+            margin-top: 20px;
         }
 
         .split-layout {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
-            align-items: flex-start;
+            align-items: start;
         }
-
-        .config-pane, .preview-pane { width: 50%; }
 
         .select-wrapper { position: relative; margin-bottom: 20px; }
         select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             font-size: 14px;
             appearance: none;
             background: white;
+            cursor: pointer;
         }
 
         .select-wrapper::after {
             content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            color: #aaa; pointer-events: none; font-size: 10px;
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            color: #aaa; pointer-events: none; font-size: 12px;
         }
 
         .dimension-group {
             background: #f9f9f9;
-            padding: 15px;
+            padding: 20px;
             border-radius: 4px;
             border: 1px solid #eee;
         }
@@ -134,29 +130,29 @@
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: white;
-            max-width: 200px;
+            max-width: 250px;
         }
 
-        .input-wrapper input { border: none; padding: 10px; flex: 1; outline: none; width: 100%; font-size: 14px; }
-        .unit-label { background: #eee; padding: 10px 12px; border-left: 1px solid var(--border-color); color: #666; font-weight: 600; font-size: 12px; }
+        .input-wrapper input { border: none; padding: 12px; flex: 1; outline: none; width: 50px; font-size: 15px; }
+        .unit-label { background: #eee; padding: 12px 15px; border-left: 1px solid var(--border-color); color: #666; font-weight: 600; }
 
-        /* IMAGE SCALING FIXES */
+        /* Preview Image Container */
         .image-box {
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: white;
-            height: 220px; /* Fixed height for consistent PDF layout */
+            height: 250px; /* Fixed height for PDF structure */
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 15px;
+            padding: 20px;
             overflow: hidden;
         }
 
         #preview-img { 
             max-width: 100%; 
             max-height: 100%; 
-            object-fit: contain; /* Ensures the image fits without stretching or clipping */
+            object-fit: contain; 
             display: none; 
         }
 
@@ -164,41 +160,39 @@
             background-color: var(--primary-blue);
             color: white;
             border: none;
-            padding: 12px 30px;
+            padding: 14px 30px;
             font-size: 14px;
             font-weight: 700;
             border-radius: 4px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 30px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
-        /* Hide elements from the capture */
-        .no-export { display: none !important; }
+        .btn-pdf:hover { background-color: #0056a0; }
     </style>
 </head>
 <body>
 
-    <div class="config-container" id="pdf-content">
+    <!-- This ID "main-app" is what we will capture -->
+    <div class="config-container" id="main-app">
         <header>
             <h1>Axle <span>Configurator</span></h1>
-            <div style="font-weight: 800; color: #a31d24; font-size: 18px;">SWS UK</div>
+            <div class="brand">SWS UK</div>
         </header>
 
         <!-- Step 1 -->
-        <div id="step-1-area">
-            <label class="section-label">1. Application Category</label>
-            <div class="selection-grid" id="main-cats">
-                <div class="selection-card" id="cat-traditional" onclick="selectCategory('traditional')">
-                    <i class="fa-solid fa-house-user"></i>
-                    <h3>Traditional</h3>
-                </div>
-                <div class="selection-card" id="cat-industrial" onclick="selectCategory('industrial')">
-                    <i class="fa-solid fa-industry"></i>
-                    <h3>Industrial</h3>
-                </div>
+        <label class="section-label">1. Application Category</label>
+        <div class="selection-grid" id="main-cats">
+            <div class="selection-card" id="cat-traditional" onclick="selectCategory('traditional')">
+                <i class="fa-solid fa-house-user"></i>
+                <h3>Traditional</h3>
+            </div>
+            <div class="selection-card" id="cat-industrial" onclick="selectCategory('industrial')">
+                <i class="fa-solid fa-industry"></i>
+                <h3>Industrial</h3>
             </div>
         </div>
 
@@ -217,20 +211,19 @@
             </div>
         </div>
 
-        <!-- Configuration UI -->
+        <!-- Step 3 Configuration UI -->
         <div id="config-ui" class="config-step-wrapper">
             <div class="split-layout">
                 <div class="config-pane">
                     <label class="section-label" id="dropdown-label">3. Selection</label>
                     <div class="select-wrapper">
-                        <select id="config-dropdown" onchange="updateImage()">
-                        </select>
+                        <select id="config-dropdown" onchange="updateImage()"></select>
                     </div>
 
                     <div class="dimension-group">
                         <label class="section-label">4. Dimension Width</label>
                         <div class="input-wrapper">
-                            <input type="number" id="input-width" placeholder="0000">
+                            <input type="number" id="input-width" placeholder="0.00">
                             <div class="unit-label">mm</div>
                         </div>
                     </div>
@@ -240,20 +233,17 @@
                     <label class="section-label">Visual Reference</label>
                     <div class="image-box">
                         <img id="preview-img" src="" alt="Axle Preview">
-                        <span id="placeholder-text" style="color:#999; font-style:italic; font-size: 13px;">Select configuration...</span>
+                        <span id="placeholder-text" style="color:#999; font-style:italic; font-size: 13px;">Select option to preview...</span>
                     </div>
                 </div>
             </div>
 
-            <div style="text-align: right;" id="btn-container">
+            <!-- This div is excluded from the PDF -->
+            <div style="text-align: right;" id="pdf-button-container">
                 <button class="btn-pdf" onclick="generatePDF()">
                     <i class="fa-solid fa-file-pdf"></i> Download PDF Report
                 </button>
             </div>
-        </div>
-        
-        <div id="footer-info" style="display:none; margin-top: 20px; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">
-            Technical specification generated on <span id="date-stamp"></span>
         </div>
     </div>
 
@@ -327,35 +317,27 @@
         }
 
         function generatePDF() {
-            const element = document.getElementById('pdf-content');
-            const btnContainer = document.getElementById('btn-container');
-            const footer = document.getElementById('footer-info');
-            const dateStamp = document.getElementById('date-stamp');
-
-            // Pre-process for clean PDF
-            btnContainer.classList.add('no-export');
-            footer.style.display = 'block';
-            dateStamp.textContent = new Date().toLocaleString();
+            const element = document.getElementById('main-app');
+            const widthValue = document.getElementById('input-width').value || "0000";
 
             const opt = {
-                margin:       [10, 10],
-                filename:     'Axle-Specification.pdf',
-                image:        { type: 'jpeg', quality: 1 },
+                margin:       [10, 10, 10, 10], // top, left, bottom, right
+                filename:     `Axle-Config-${widthValue}mm.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
-                    scale: 3, // High resolution
+                    scale: 2, 
                     useCORS: true, 
-                    logging: false,
-                    windowWidth: 900 // Force the browser to render at the container's ideal width
+                    letterRendering: true,
+                    // FORCE THE ENGINE TO SEE A DESKTOP WIDTH
+                    windowWidth: 1200 
                 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // Hide the PDF button in the export
+                ignoreElements: (el) => el.id === 'pdf-button-container'
             };
 
-            // Generate
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Post-process: Reset UI
-                btnContainer.classList.remove('no-export');
-                footer.style.display = 'none';
-            });
+            // Run capture
+            html2pdf().set(opt).from(element).save();
         }
     </script>
 </body>
