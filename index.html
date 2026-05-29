@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axle Configurator | System</title>
+    <title>Axle Configurator | SWS UK</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         :root {
             --primary-blue: #0077c8;
@@ -52,7 +56,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* Selection Cards */
+        /* Step 1 Selection Cards */
         .selection-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -89,7 +93,7 @@
             animation: fadeIn 0.4s ease;
         }
 
-        /* Split Layout */
+        /* Split Layout 50/50 */
         .split-layout {
             display: flex;
             gap: 40px;
@@ -98,7 +102,7 @@
 
         .config-pane, .preview-pane { width: 50%; }
 
-        /* Dropdown & Input */
+        /* Select Styling */
         .select-wrapper { position: relative; margin-bottom: 30px; }
         select {
             width: 100%;
@@ -117,6 +121,7 @@
             color: #aaa; pointer-events: none;
         }
 
+        /* Dimension Input Group */
         .dimension-group {
             background: #f9f9f9;
             padding: 20px;
@@ -150,7 +155,35 @@
         #preview-img { max-width: 100%; height: auto; max-height: 220px; display: none; }
         .placeholder-msg { color: #999; font-style: italic; font-size: 14px; text-align: center; }
 
+        /* Submit Button */
+        .submit-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        .btn-pdf {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-pdf:hover { background-color: #0056a0; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Hidden Template for PDF */
+        #pdf-export-content { display: none; padding: 40px; }
     </style>
 </head>
 <body>
@@ -171,7 +204,7 @@
             </div>
         </div>
 
-        <!-- Step 1.5: Industrial Drive Type (Only for Industrial) -->
+        <!-- Step 1.5: Industrial Drive Type -->
         <div id="drive-type-step" class="sub-step">
             <label class="section-label">2. Select Drive Type</label>
             <div class="selection-grid">
@@ -186,22 +219,21 @@
             </div>
         </div>
 
-        <!-- Step 2: Main Configuration UI -->
+        <!-- Step 2: Configuration UI -->
         <div id="config-ui" class="config-step-wrapper">
             <div class="split-layout">
-                
                 <div class="config-pane">
                     <label class="section-label" id="dropdown-label">3. Select Configuration</label>
                     <div class="select-wrapper">
                         <select id="config-dropdown" onchange="updateImage()">
-                            <!-- Populated via JS -->
+                            <!-- JS Injection -->
                         </select>
                     </div>
 
                     <div class="dimension-group">
                         <label class="section-label">4. Dimension Width</label>
                         <div class="input-wrapper">
-                            <input type="number" placeholder="Enter width...">
+                            <input type="number" id="input-width" placeholder="Enter width...">
                             <div class="unit-label">mm</div>
                         </div>
                     </div>
@@ -214,10 +246,19 @@
                         <img id="preview-img" src="" alt="Axle Preview">
                     </div>
                 </div>
+            </div>
 
+            <!-- Export Button -->
+            <div class="submit-section">
+                <button class="btn-pdf" onclick="generatePDF()">
+                    <i class="fa-solid fa-file-pdf"></i> Export Configuration PDF
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- This hidden div is used to build the PDF report -->
+    <div id="pdf-export-content"></div>
 
     <script>
         let currentCategory = '';
@@ -243,14 +284,13 @@
 
         function selectCategory(cat) {
             currentCategory = cat;
-            
-            // Reset UI
             document.querySelectorAll('.selection-card').forEach(c => c.classList.remove('active'));
             document.getElementById('cat-' + cat).classList.add('active');
             document.getElementById('config-ui').style.display = 'none';
             document.getElementById('drive-type-step').style.display = 'none';
 
             if (cat === 'traditional') {
+                currentDriveType = '';
                 loadDropdown('traditional');
                 document.getElementById('config-ui').style.display = 'block';
                 document.getElementById('dropdown-label').textContent = "2. Select Configuration";
@@ -264,7 +304,6 @@
             document.getElementById('type-direct').classList.remove('active');
             document.getElementById('type-indirect').classList.remove('active');
             document.getElementById('type-' + type).classList.add('active');
-            
             loadDropdown(type);
             document.getElementById('config-ui').style.display = 'block';
             document.getElementById('dropdown-label').textContent = "3. Select Configuration";
@@ -273,14 +312,12 @@
         function loadDropdown(key) {
             const dropdown = document.getElementById('config-dropdown');
             dropdown.innerHTML = '<option value="" disabled selected>Please select an option...</option>';
-            
             data[key].forEach(opt => {
                 let el = document.createElement("option");
                 el.textContent = opt.text;
                 el.value = opt.file;
                 dropdown.appendChild(el);
             });
-
             document.getElementById('preview-img').style.display = 'none';
             document.getElementById('placeholder').style.display = 'block';
         }
@@ -289,13 +326,78 @@
             const dropdown = document.getElementById('config-dropdown');
             const img = document.getElementById('preview-img');
             const placeholder = document.getElementById('placeholder');
-
             if (dropdown.value) {
                 img.src = dropdown.value; 
                 img.style.display = 'block';
                 placeholder.style.display = 'none';
             }
         }
+
+        function generatePDF() {
+            const width = document.getElementById('input-width').value;
+            const dropdown = document.getElementById('config-dropdown');
+            const selectionText = dropdown.options[dropdown.selectedIndex].text;
+            const imgSrc = document.getElementById('preview-img').src;
+
+            if (!width || !dropdown.value) {
+                alert("Please complete the configuration and dimension before exporting.");
+                return;
+            }
+
+            // Construct the PDF HTML content
+            const pdfHTML = `
+                <div style="font-family: 'Open Sans', sans-serif; color: #333;">
+                    <div style="border-bottom: 2px solid #0077c8; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                        <h1 style="margin:0; font-size: 24px; color: #444;">Axle Configuration <span style="color: #0077c8;">Technical Data</span></h1>
+                        <div style="font-weight: bold; color: #a31d24;">SWS UK</div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; width: 40%; font-weight: bold;">Application Category:</td>
+                            <td style="padding: 10px; border: 1px solid #eee;">${currentCategory.toUpperCase()}</td>
+                        </tr>
+                        ${currentDriveType ? `
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; font-weight: bold;">Drive System:</td>
+                            <td style="padding: 10px; border: 1px solid #eee;">${currentDriveType.toUpperCase()} DRIVE</td>
+                        </tr>` : ''}
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; font-weight: bold;">Assembly Configuration:</td>
+                            <td style="padding: 10px; border: 1px solid #eee;">${selectionText}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; font-weight: bold;">Requested Width:</td>
+                            <td style="padding: 10px; border: 1px solid #eee; font-size: 18px; color: #0077c8;"><strong>${width} mm</strong></td>
+                        </tr>
+                    </table>
+
+                    <div style="text-align: center; border: 1px solid #ddd; padding: 20px;">
+                        <div style="font-size: 12px; color: #888; margin-bottom: 10px; text-transform: uppercase;">Technical Illustration</div>
+                        <img src="${imgSrc}" style="width: 100%; max-height: 300px;">
+                    </div>
+
+                    <div style="margin-top: 50px; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">
+                        Generated via SWS UK Axle Configurator | ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+
+            const pdfArea = document.getElementById('pdf-export-content');
+            pdfArea.innerHTML = pdfHTML;
+
+            const opt = {
+                margin:       15,
+                filename:     `Axle-Config-${width}mm.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, logging: false, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Run generation
+            html2pdf().from(pdfArea).set(opt).save();
+        }
     </script>
+
 </body>
 </html>
