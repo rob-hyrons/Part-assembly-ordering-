@@ -68,7 +68,7 @@
 
         .selection-card {
             border: 2px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 15px;
             text-align: center;
             cursor: pointer;
@@ -99,7 +99,7 @@
             align-items: start;
         }
 
-        .select-wrapper { position: relative; margin-bottom: 20px; }
+        .select-wrapper { position: relative; }
         select {
             width: 100%;
             padding: 12px;
@@ -214,12 +214,12 @@
             <div class="split-layout">
                 <div class="config-pane">
                     <label class="section-label" id="dropdown-label">3. Selection</label>
-                    <div class="select-wrapper">
+                    <div class="select-wrapper" style="margin-bottom: 20px;">
                         <select id="config-dropdown" onchange="handleSelectionChange()"></select>
                     </div>
 
                     <div class="dimension-group">
-                        <!-- Width: Always Visible -->
+                        <!-- Width -->
                         <div class="input-item">
                             <label class="section-label">Dimension Width</label>
                             <div class="input-wrapper">
@@ -228,19 +228,33 @@
                             </div>
                         </div>
 
-                        <!-- Barrel Size: Always Visible -->
+                        <!-- Barrel Size: NOW A DROPDOWN -->
                         <div class="input-item">
                             <label class="section-label">Barrel Size</label>
-                            <div class="input-wrapper">
-                                <input type="text" id="input-barrel" placeholder="Enter barrel size...">
+                            <div class="select-wrapper">
+                                <select id="select-barrel">
+                                    <option value="" disabled selected>Select barrel size...</option>
+                                    <option>4" 16 g</option>
+                                    <option>4" 10g</option>
+                                    <option>5" 10g</option>
+                                    <option>5.5" 6g</option>
+                                    <option>6 5/8th" 6g</option>
+                                    <option>7 5/8th" 3g</option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- Shaft Size: Conditional (Industrial with NO motor) -->
+                        <!-- Shaft Size: NOW A DROPDOWN (Conditional) -->
                         <div class="input-item conditional-input" id="box-shaft">
                             <label class="section-label">Shaft Size</label>
-                            <div class="input-wrapper">
-                                <input type="text" id="input-shaft" placeholder="Enter shaft size...">
+                            <div class="select-wrapper">
+                                <select id="select-shaft">
+                                    <option value="" disabled selected>Select shaft size...</option>
+                                    <option>25.4mm</option>
+                                    <option>30mm</option>
+                                    <option>40mm</option>
+                                    <option>55mm</option>
+                                </select>
                             </div>
                         </div>
 
@@ -340,10 +354,15 @@
             document.getElementById('preview-img').style.display = 'none';
             document.getElementById('placeholder-text').style.display = 'block';
             document.querySelectorAll('.conditional-input').forEach(box => box.style.display = 'none');
+            // Reset select values
+            document.getElementById('select-barrel').selectedIndex = 0;
+            document.getElementById('select-shaft').selectedIndex = 0;
         }
 
         function handleSelectionChange() {
             const dropdown = document.getElementById('config-dropdown');
+            if(!dropdown.value) return;
+
             const selectedText = dropdown.options[dropdown.selectedIndex].text.toLowerCase();
             
             // 1. Update Preview Image
@@ -360,7 +379,7 @@
             const hasMotor = selectedText.includes('motor');
             const hasPlate = selectedText.includes('plate');
 
-            // Requirement: If Industrial and NO motor -> Show Shaft Size
+            // Requirement: If Industrial and NO motor -> Show Shaft Size dropdown
             if (currentCategory === 'industrial' && !hasMotor) {
                 shaftBox.style.display = 'flex';
             } else {
