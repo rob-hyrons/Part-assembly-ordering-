@@ -34,6 +34,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border: 1px solid var(--border-color);
+            position: relative;
         }
 
         h1 {
@@ -56,7 +57,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Step 1 Selection Cards */
         .selection-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -74,26 +74,21 @@
             background: white;
         }
 
-        .selection-card:hover { background-color: #fafafa; border-color: #ccc; }
         .selection-card.active {
             border-color: var(--primary-blue);
-            background-color: rgba(0, 119, 200, 0.03);
+            background-color: rgba(0, 119, 200, 0.05);
         }
 
         .selection-card i { font-size: 24px; color: #999; margin-bottom: 10px; display: block; }
         .selection-card.active i { color: var(--primary-blue); }
-        .selection-card h3 { margin: 0; font-size: 16px; }
 
-        /* Hidden Sections */
         .sub-step, .config-step-wrapper {
             display: none;
             border-top: 1px dashed var(--border-color);
             padding-top: 30px;
             margin-top: 20px;
-            animation: fadeIn 0.4s ease;
         }
 
-        /* Split Layout 50/50 */
         .split-layout {
             display: flex;
             gap: 40px;
@@ -102,17 +97,14 @@
 
         .config-pane, .preview-pane { width: 50%; }
 
-        /* Select Styling */
         .select-wrapper { position: relative; margin-bottom: 30px; }
         select {
             width: 100%;
-            padding: 12px 15px;
-            font-size: 14px;
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background-color: white;
             appearance: none;
-            cursor: pointer;
         }
 
         .select-wrapper::after {
@@ -121,7 +113,6 @@
             color: #aaa; pointer-events: none;
         }
 
-        /* Dimension Input Group */
         .dimension-group {
             background: #f9f9f9;
             padding: 20px;
@@ -137,10 +128,9 @@
             max-width: 250px;
         }
 
-        .input-wrapper input { border: none; padding: 12px; flex: 1; outline: none; font-size: 15px; }
-        .unit-label { background: #eee; padding: 12px 15px; border-left: 1px solid var(--border-color); color: #666; font-weight: 600; font-size: 13px; }
+        .input-wrapper input { border: none; padding: 12px; flex: 1; outline: none; }
+        .unit-label { background: #eee; padding: 12px 15px; border-left: 1px solid var(--border-color); color: #666; font-weight: 600; }
 
-        /* Preview Box */
         .image-box {
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -152,16 +142,7 @@
             padding: 20px;
         }
 
-        #preview-img { max-width: 100%; height: auto; max-height: 220px; display: none; }
-        .placeholder-msg { color: #999; font-style: italic; font-size: 14px; text-align: center; }
-
-        /* Submit Button */
-        .submit-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            text-align: right;
-        }
+        #preview-img { max-width: 100%; height: auto; display: none; }
 
         .btn-pdf {
             background-color: var(--primary-blue);
@@ -172,28 +153,28 @@
             font-weight: 700;
             border-radius: 4px;
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: 0.2s;
+            margin-top: 30px;
         }
 
-        .btn-pdf:hover { background-color: #0056a0; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Hidden Template for PDF */
-        #pdf-export-content { display: none; padding: 40px; }
+        /* Print styling to ensure PDF looks clean */
+        @media print {
+            .btn-pdf, .selection-grid i { display: none !important; }
+            body { background: white; padding: 0; }
+            .config-container { box-shadow: none; border: none; width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="config-container">
-        <h1>Axle <span>Configurator</span></h1>
+    <div class="config-container" id="capture-area">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Axle <span>Configurator</span></h1>
+            <div style="font-weight: 800; color: #a31d24;">SWS UK</div>
+        </div>
 
-        <!-- Step 1: Main Category -->
-        <label class="section-label">1. Select Application Category</label>
-        <div class="selection-grid">
+        <!-- Step 1 -->
+        <label class="section-label">1. Application Category</label>
+        <div class="selection-grid" id="step-1-grid">
             <div class="selection-card" id="cat-traditional" onclick="selectCategory('traditional')">
                 <i class="fa-solid fa-house-user"></i>
                 <h3>Traditional</h3>
@@ -204,9 +185,9 @@
             </div>
         </div>
 
-        <!-- Step 1.5: Industrial Drive Type -->
+        <!-- Industrial Sub-Step -->
         <div id="drive-type-step" class="sub-step">
-            <label class="section-label">2. Select Drive Type</label>
+            <label class="section-label">2. Drive Type</label>
             <div class="selection-grid">
                 <div class="selection-card" id="type-direct" onclick="selectDriveType('direct')">
                     <i class="fa-solid fa-bolt"></i>
@@ -219,21 +200,20 @@
             </div>
         </div>
 
-        <!-- Step 2: Configuration UI -->
+        <!-- Configuration UI -->
         <div id="config-ui" class="config-step-wrapper">
             <div class="split-layout">
                 <div class="config-pane">
-                    <label class="section-label" id="dropdown-label">3. Select Configuration</label>
+                    <label class="section-label" id="dropdown-label">3. Selection</label>
                     <div class="select-wrapper">
                         <select id="config-dropdown" onchange="updateImage()">
-                            <!-- JS Injection -->
                         </select>
                     </div>
 
                     <div class="dimension-group">
                         <label class="section-label">4. Dimension Width</label>
                         <div class="input-wrapper">
-                            <input type="number" id="input-width" placeholder="Enter width...">
+                            <input type="number" id="input-width" placeholder="0000">
                             <div class="unit-label">mm</div>
                         </div>
                     </div>
@@ -242,23 +222,19 @@
                 <div class="preview-pane">
                     <label class="section-label">Visual Reference</label>
                     <div class="image-box">
-                        <div id="placeholder" class="placeholder-msg">Select an option to view graphic</div>
                         <img id="preview-img" src="" alt="Axle Preview">
+                        <span id="placeholder-text" style="color:#999; font-style:italic">Select an option...</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Export Button -->
-            <div class="submit-section">
-                <button class="btn-pdf" onclick="generatePDF()">
-                    <i class="fa-solid fa-file-pdf"></i> Export Configuration PDF
+            <div style="text-align: right;">
+                <button class="btn-pdf" id="export-btn" onclick="generatePDF()">
+                    <i class="fa-solid fa-file-pdf"></i> Download PDF Report
                 </button>
             </div>
         </div>
     </div>
-
-    <!-- This hidden div is used to build the PDF report -->
-    <div id="pdf-export-content"></div>
 
     <script>
         let currentCategory = '';
@@ -284,7 +260,7 @@
 
         function selectCategory(cat) {
             currentCategory = cat;
-            document.querySelectorAll('.selection-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('#step-1-grid .selection-card').forEach(c => c.classList.remove('active'));
             document.getElementById('cat-' + cat).classList.add('active');
             document.getElementById('config-ui').style.display = 'none';
             document.getElementById('drive-type-step').style.display = 'none';
@@ -293,7 +269,7 @@
                 currentDriveType = '';
                 loadDropdown('traditional');
                 document.getElementById('config-ui').style.display = 'block';
-                document.getElementById('dropdown-label').textContent = "2. Select Configuration";
+                document.getElementById('dropdown-label').textContent = "2. Selection";
             } else {
                 document.getElementById('drive-type-step').style.display = 'block';
             }
@@ -306,12 +282,12 @@
             document.getElementById('type-' + type).classList.add('active');
             loadDropdown(type);
             document.getElementById('config-ui').style.display = 'block';
-            document.getElementById('dropdown-label').textContent = "3. Select Configuration";
+            document.getElementById('dropdown-label').textContent = "3. Selection";
         }
 
         function loadDropdown(key) {
             const dropdown = document.getElementById('config-dropdown');
-            dropdown.innerHTML = '<option value="" disabled selected>Please select an option...</option>';
+            dropdown.innerHTML = '<option value="" disabled selected>Select option...</option>';
             data[key].forEach(opt => {
                 let el = document.createElement("option");
                 el.textContent = opt.text;
@@ -319,85 +295,42 @@
                 dropdown.appendChild(el);
             });
             document.getElementById('preview-img').style.display = 'none';
-            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('placeholder-text').style.display = 'block';
         }
 
         function updateImage() {
             const dropdown = document.getElementById('config-dropdown');
             const img = document.getElementById('preview-img');
-            const placeholder = document.getElementById('placeholder');
-            if (dropdown.value) {
-                img.src = dropdown.value; 
-                img.style.display = 'block';
-                placeholder.style.display = 'none';
-            }
+            img.src = dropdown.value; 
+            img.style.display = 'block';
+            document.getElementById('placeholder-text').style.display = 'none';
         }
 
         function generatePDF() {
-            const width = document.getElementById('input-width').value;
-            const dropdown = document.getElementById('config-dropdown');
-            const selectionText = dropdown.options[dropdown.selectedIndex].text;
-            const imgSrc = document.getElementById('preview-img').src;
-
-            if (!width || !dropdown.value) {
-                alert("Please complete the configuration and dimension before exporting.");
-                return;
-            }
-
-            // Construct the PDF HTML content
-            const pdfHTML = `
-                <div style="font-family: 'Open Sans', sans-serif; color: #333;">
-                    <div style="border-bottom: 2px solid #0077c8; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
-                        <h1 style="margin:0; font-size: 24px; color: #444;">Axle Configuration <span style="color: #0077c8;">Technical Data</span></h1>
-                        <div style="font-weight: bold; color: #a31d24;">SWS UK</div>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; width: 40%; font-weight: bold;">Application Category:</td>
-                            <td style="padding: 10px; border: 1px solid #eee;">${currentCategory.toUpperCase()}</td>
-                        </tr>
-                        ${currentDriveType ? `
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; font-weight: bold;">Drive System:</td>
-                            <td style="padding: 10px; border: 1px solid #eee;">${currentDriveType.toUpperCase()} DRIVE</td>
-                        </tr>` : ''}
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; font-weight: bold;">Assembly Configuration:</td>
-                            <td style="padding: 10px; border: 1px solid #eee;">${selectionText}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #eee; background: #f9f9f9; font-weight: bold;">Requested Width:</td>
-                            <td style="padding: 10px; border: 1px solid #eee; font-size: 18px; color: #0077c8;"><strong>${width} mm</strong></td>
-                        </tr>
-                    </table>
-
-                    <div style="text-align: center; border: 1px solid #ddd; padding: 20px;">
-                        <div style="font-size: 12px; color: #888; margin-bottom: 10px; text-transform: uppercase;">Technical Illustration</div>
-                        <img src="${imgSrc}" style="width: 100%; max-height: 300px;">
-                    </div>
-
-                    <div style="margin-top: 50px; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">
-                        Generated via SWS UK Axle Configurator | ${new Date().toLocaleString()}
-                    </div>
-                </div>
-            `;
-
-            const pdfArea = document.getElementById('pdf-export-content');
-            pdfArea.innerHTML = pdfHTML;
+            const btn = document.getElementById('export-btn');
+            const element = document.getElementById('capture-area');
+            
+            // Hide button so it doesn't appear in PDF
+            btn.style.display = 'none';
 
             const opt = {
-                margin:       15,
-                filename:     `Axle-Config-${width}mm.pdf`,
+                margin:       10,
+                filename:     'Axle-Configuration.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, logging: false, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Run generation
-            html2pdf().from(pdfArea).set(opt).save();
+            // Generate
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.style.display = 'inline-flex'; // Bring button back
+            }).catch(err => {
+                console.error(err);
+                btn.style.display = 'inline-flex';
+                // Fallback if library fails
+                window.print();
+            });
         }
     </script>
-
 </body>
 </html>
