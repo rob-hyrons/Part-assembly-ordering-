@@ -26,7 +26,6 @@
             color: var(--text-dark);
         }
 
-        /* This is the area being captured */
         .config-container {
             max-width: 1000px;
             margin: 0 auto;
@@ -55,7 +54,7 @@
             font-weight: 700;
             font-size: 11px;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -123,25 +122,30 @@
             padding: 20px;
             border-radius: 4px;
             border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
+        .input-item { display: flex; flex-direction: column; }
         .input-wrapper {
             display: flex;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: white;
-            max-width: 250px;
+            overflow: hidden;
         }
 
-        .input-wrapper input { border: none; padding: 12px; flex: 1; outline: none; width: 50px; font-size: 15px; }
-        .unit-label { background: #eee; padding: 12px 15px; border-left: 1px solid var(--border-color); color: #666; font-weight: 600; }
+        .input-wrapper input { border: none; padding: 10px; flex: 1; outline: none; font-size: 14px; width: 100%; }
+        .unit-label { background: #eee; padding: 10px 12px; border-left: 1px solid var(--border-color); color: #666; font-weight: 600; font-size: 12px; min-width: 35px; text-align: center; }
 
-        /* Preview Image Container */
+        .conditional-input { display: none; }
+
         .image-box {
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: white;
-            height: 250px; /* Fixed height for PDF structure */
+            height: 350px; 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -149,12 +153,7 @@
             overflow: hidden;
         }
 
-        #preview-img { 
-            max-width: 100%; 
-            max-height: 100%; 
-            object-fit: contain; 
-            display: none; 
-        }
+        #preview-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
 
         .btn-pdf {
             background-color: var(--primary-blue);
@@ -176,7 +175,6 @@
 </head>
 <body>
 
-    <!-- This ID "main-app" is what we will capture -->
     <div class="config-container" id="main-app">
         <header>
             <h1>Axle <span>Configurator</span></h1>
@@ -196,7 +194,7 @@
             </div>
         </div>
 
-        <!-- Industrial Sub-Step -->
+        <!-- Step 2 (Conditional) -->
         <div id="drive-type-step" class="sub-step">
             <label class="section-label">2. Drive Type</label>
             <div class="selection-grid" id="drive-cats">
@@ -211,20 +209,55 @@
             </div>
         </div>
 
-        <!-- Step 3 Configuration UI -->
+        <!-- Step 3: Detailed Config -->
         <div id="config-ui" class="config-step-wrapper">
             <div class="split-layout">
                 <div class="config-pane">
                     <label class="section-label" id="dropdown-label">3. Selection</label>
                     <div class="select-wrapper">
-                        <select id="config-dropdown" onchange="updateImage()"></select>
+                        <select id="config-dropdown" onchange="handleSelectionChange()"></select>
                     </div>
 
                     <div class="dimension-group">
-                        <label class="section-label">4. Dimension Width</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="input-width" placeholder="0.00">
-                            <div class="unit-label">mm</div>
+                        <!-- Width: Always Visible -->
+                        <div class="input-item">
+                            <label class="section-label">Dimension Width</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-width" placeholder="0.00">
+                                <div class="unit-label">mm</div>
+                            </div>
+                        </div>
+
+                        <!-- Barrel Size: Always Visible -->
+                        <div class="input-item">
+                            <label class="section-label">Barrel Size</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="input-barrel" placeholder="Enter barrel size...">
+                            </div>
+                        </div>
+
+                        <!-- Shaft Size: Conditional (Industrial with NO motor) -->
+                        <div class="input-item conditional-input" id="box-shaft">
+                            <label class="section-label">Shaft Size</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="input-shaft" placeholder="Enter shaft size...">
+                            </div>
+                        </div>
+
+                        <!-- Motor Spec: Conditional -->
+                        <div class="input-item conditional-input" id="box-motor">
+                            <label class="section-label">Motor Specification</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="input-motor" placeholder="Type motor specification...">
+                            </div>
+                        </div>
+
+                        <!-- End Plate Size: Conditional -->
+                        <div class="input-item conditional-input" id="box-plate">
+                            <label class="section-label">End Plate Size</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="input-plate" placeholder="Enter end plate size...">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -238,7 +271,6 @@
                 </div>
             </div>
 
-            <!-- This div is excluded from the PDF -->
             <div style="text-align: right;" id="pdf-button-container">
                 <button class="btn-pdf" onclick="generatePDF()">
                     <i class="fa-solid fa-file-pdf"></i> Download PDF Report
@@ -249,7 +281,6 @@
 
     <script>
         let currentCategory = '';
-        let currentDriveType = '';
 
         const data = {
             traditional: [
@@ -277,7 +308,6 @@
             document.getElementById('drive-type-step').style.display = 'none';
 
             if (cat === 'traditional') {
-                currentDriveType = '';
                 loadDropdown('traditional');
                 document.getElementById('config-ui').style.display = 'block';
                 document.getElementById('dropdown-label').textContent = "2. Selection";
@@ -287,7 +317,6 @@
         }
 
         function selectDriveType(type) {
-            currentDriveType = type;
             document.querySelectorAll('#drive-cats .selection-card').forEach(c => c.classList.remove('active'));
             document.getElementById('type-' + type).classList.add('active');
             loadDropdown(type);
@@ -304,16 +333,45 @@
                 el.value = opt.file;
                 dropdown.appendChild(el);
             });
-            document.getElementById('preview-img').style.display = 'none';
-            document.getElementById('placeholder-text').style.display = 'block';
+            resetInputsAndPreview();
         }
 
-        function updateImage() {
+        function resetInputsAndPreview() {
+            document.getElementById('preview-img').style.display = 'none';
+            document.getElementById('placeholder-text').style.display = 'block';
+            document.querySelectorAll('.conditional-input').forEach(box => box.style.display = 'none');
+        }
+
+        function handleSelectionChange() {
             const dropdown = document.getElementById('config-dropdown');
+            const selectedText = dropdown.options[dropdown.selectedIndex].text.toLowerCase();
+            
+            // 1. Update Preview Image
             const img = document.getElementById('preview-img');
             img.src = dropdown.value; 
             img.style.display = 'block';
             document.getElementById('placeholder-text').style.display = 'none';
+
+            // 2. Dynamic Input Logic
+            const shaftBox = document.getElementById('box-shaft');
+            const motorBox = document.getElementById('box-motor');
+            const plateBox = document.getElementById('box-plate');
+
+            const hasMotor = selectedText.includes('motor');
+            const hasPlate = selectedText.includes('plate');
+
+            // Requirement: If Industrial and NO motor -> Show Shaft Size
+            if (currentCategory === 'industrial' && !hasMotor) {
+                shaftBox.style.display = 'flex';
+            } else {
+                shaftBox.style.display = 'none';
+            }
+
+            // Show Motor spec if "motor" is selected
+            motorBox.style.display = hasMotor ? 'flex' : 'none';
+            
+            // Show Plate spec if "plate" is selected
+            plateBox.style.display = hasPlate ? 'flex' : 'none';
         }
 
         function generatePDF() {
@@ -321,22 +379,19 @@
             const widthValue = document.getElementById('input-width').value || "0000";
 
             const opt = {
-                margin:       [10, 10, 10, 10], // top, left, bottom, right
+                margin:       [10, 10, 10, 10],
                 filename:     `Axle-Config-${widthValue}mm.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
                     letterRendering: true,
-                    // FORCE THE ENGINE TO SEE A DESKTOP WIDTH
                     windowWidth: 1200 
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                // Hide the PDF button in the export
                 ignoreElements: (el) => el.id === 'pdf-button-container'
             };
 
-            // Run capture
             html2pdf().set(opt).from(element).save();
         }
     </script>
