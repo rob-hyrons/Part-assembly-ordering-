@@ -146,7 +146,7 @@
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: white;
-            height: 350px; 
+            height: 380px; 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -197,7 +197,7 @@
             </div>
         </div>
 
-        <!-- Step 2 (Conditional) -->
+        <!-- Step 2 (Conditional Industrial) -->
         <div id="drive-type-step" class="sub-step">
             <label class="section-label">2. Drive Type</label>
             <div class="selection-grid" id="drive-cats">
@@ -247,7 +247,7 @@
                             </div>
                         </div>
 
-                        <!-- Shaft Size: Conditional -->
+                        <!-- Shaft Size: Conditional Industrial -->
                         <div class="input-item conditional-input" id="box-shaft">
                             <label class="section-label">Shaft Size</label>
                             <div class="select-wrapper">
@@ -269,7 +269,7 @@
                             </div>
                         </div>
 
-                        <!-- Control Panel: Conditional (Industrial Motors) -->
+                        <!-- Control Panel: Conditional -->
                         <div class="input-item conditional-input" id="box-control-panel">
                             <label class="section-label">Control Panel</label>
                             <div class="select-wrapper">
@@ -282,11 +282,14 @@
                             </div>
                         </div>
 
-                        <!-- End Plate Size: Conditional -->
+                        <!-- End Plate Size: Dynamic Dropdown -->
                         <div class="input-item conditional-input" id="box-plate">
                             <label class="section-label">End Plate Size</label>
-                            <div class="input-wrapper">
-                                <input type="text" id="input-plate" placeholder="Enter end plate size...">
+                            <div class="select-wrapper">
+                                <select id="select-plate">
+                                    <option value="" disabled selected>Select size...</option>
+                                    <!-- Dynamic increments injected here -->
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -373,6 +376,7 @@
             document.getElementById('select-barrel').selectedIndex = 0;
             document.getElementById('select-shaft').selectedIndex = 0;
             document.getElementById('select-control-panel').selectedIndex = 0;
+            document.getElementById('select-plate').selectedIndex = 0;
         }
 
         function handleSelectionChange() {
@@ -381,40 +385,46 @@
 
             const selectedText = dropdown.options[dropdown.selectedIndex].text.toLowerCase();
             
-            // 1. Update Preview Image
+            // Preview
             const img = document.getElementById('preview-img');
             img.src = dropdown.value; 
             img.style.display = 'block';
             document.getElementById('placeholder-text').style.display = 'none';
 
-            // 2. Dynamic Input Logic
+            // Elements
             const shaftBox = document.getElementById('box-shaft');
             const motorBox = document.getElementById('box-motor');
             const plateBox = document.getElementById('box-plate');
             const controlBox = document.getElementById('box-control-panel');
+            const plateDropdown = document.getElementById('select-plate');
 
             const hasMotor = selectedText.includes('motor');
             const hasPlate = selectedText.includes('plate');
 
-            // Requirement: Industrial & NO motor -> Show Shaft Size
-            if (currentCategory === 'industrial' && !hasMotor) {
-                shaftBox.style.display = 'flex';
-            } else {
-                shaftBox.style.display = 'none';
-            }
+            // 1. Shaft Logic
+            shaftBox.style.display = (currentCategory === 'industrial' && !hasMotor) ? 'flex' : 'none';
 
-            // Show Motor spec if "motor" is selected
+            // 2. Motor Logic
             motorBox.style.display = hasMotor ? 'flex' : 'none';
 
-            // Show Control Panel if Industrial & has motor
-            if (currentCategory === 'industrial' && hasMotor) {
-                controlBox.style.display = 'flex';
-            } else {
-                controlBox.style.display = 'none';
-            }
+            // 3. Control Panel Logic
+            controlBox.style.display = (currentCategory === 'industrial' && hasMotor) ? 'flex' : 'none';
             
-            // Show Plate spec if "plate" is selected
-            plateBox.style.display = hasPlate ? 'flex' : 'none';
+            // 4. End Plate Logic (Dynamic Range)
+            if (hasPlate) {
+                plateBox.style.display = 'flex';
+                plateDropdown.innerHTML = '<option value="" disabled selected>Select size...</option>';
+                
+                const max = (currentCategory === 'traditional') ? 450 : 550;
+                for (let i = 300; i <= max; i += 50) {
+                    let opt = document.createElement("option");
+                    opt.textContent = i + " mm";
+                    opt.value = i;
+                    plateDropdown.appendChild(opt);
+                }
+            } else {
+                plateBox.style.display = 'none';
+            }
         }
 
         function generatePDF() {
